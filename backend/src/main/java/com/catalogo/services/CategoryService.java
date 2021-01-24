@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,4 +24,13 @@ public class CategoryService {
 
         return list.stream().map(c -> new CategoryDTO(c)).collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public CategoryDTO findBYId(Long id){
+
+        Optional<Category> byId = categoryRepository.findById(id);
+
+        return  new CategoryDTO(byId.get());
+    }
 }
+
