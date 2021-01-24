@@ -3,6 +3,7 @@ package com.catalogo.services;
 import com.catalogo.dto.CategoryDTO;
 import com.catalogo.entities.Category;
 import com.catalogo.repositories.CategoryRepository;
+import com.catalogo.services.exception.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +31,7 @@ public class CategoryService {
 
         Optional<Category> byId = categoryRepository.findById(id);
 
-        return  new CategoryDTO(byId.get());
+        return  new CategoryDTO(byId.orElseThrow(()-> new EntityNotFoundException("Categoria não encontrada")));
     }
 }
 
