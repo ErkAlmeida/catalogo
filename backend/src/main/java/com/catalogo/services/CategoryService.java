@@ -4,8 +4,11 @@ import com.catalogo.dto.CategoryDTO;
 import com.catalogo.entities.Category;
 import com.catalogo.repositories.CategoryRepository;
 
+import com.catalogo.services.exception.DatabaseException;
 import com.catalogo.services.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,6 +66,17 @@ public class CategoryService {
            throw  new ResourceNotFoundException("Categoria não encontrada Id: "+id);
        }
 
+    }
+
+    public void delete(Long id) {
+
+        try {
+          categoryRepository.deleteById(id);
+        }catch (EmptyResultDataAccessException e){
+            throw  new ResourceNotFoundException("Categoria não encontrada Id: "+id);
+        }catch (DataIntegrityViolationException e){
+            throw new DatabaseException("Violação de integridade");
+        }
     }
 }
 
