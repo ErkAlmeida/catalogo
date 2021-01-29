@@ -1,7 +1,10 @@
 package com.catalogo.services;
 
+import com.catalogo.dto.CategoryDTO;
 import com.catalogo.dto.ProductDTO;
+import com.catalogo.entities.Category;
 import com.catalogo.entities.Product;
+import com.catalogo.repositories.CategoryRepository;
 import com.catalogo.repositories.ProductRepository;
 import com.catalogo.services.exception.DatabaseException;
 import com.catalogo.services.exception.ResourceNotFoundException;
@@ -22,6 +25,9 @@ public class ProductService {
     @Autowired
     ProductRepository productRepository;
 
+    @Autowired
+    CategoryRepository categoryRepository;
+
     @Transactional(readOnly = true)
     public Page<ProductDTO> findAll(PageRequest pageRequest){
 
@@ -40,27 +46,27 @@ public class ProductService {
 
 
     @Transactional
-    public ProductDTO insert(ProductDTO ProductDTO){
+    public ProductDTO insert(ProductDTO productDTO){
 
-        Product Product = new Product();
+        Product product = new Product();
 
-        Product.setName(ProductDTO.getName());
+        copyDtoToEntity(productDTO, product);
 
-        Product = productRepository.save(Product);
+        product = productRepository.save(product);
 
-        return new ProductDTO(Product);
+        return new ProductDTO(product, product.getCategories());
     }
 
     @Transactional
-    public ProductDTO update(Long id,ProductDTO ProductDto) {
+    public ProductDTO update(Long id,ProductDTO productDto) {
 
        try {
-           Product Product = productRepository.getOne(id);
+           Product product = productRepository.getOne(id);
 
-           Product.setName(ProductDto.getName());
-           Product = productRepository.save(Product);
+           copyDtoToEntity(productDto, product);
+           product = productRepository.save(product);
 
-           return new ProductDTO(Product);
+           return new ProductDTO(product,product.getCategories());
 
        }catch (EntityNotFoundException e){
            throw  new ResourceNotFoundException("Categoria não encontrada Id: "+id);
@@ -76,6 +82,20 @@ public class ProductService {
             throw  new ResourceNotFoundException("Categoria não encontrada Id: "+id);
         }catch (DataIntegrityViolationException e){
             throw new DatabaseException("Violação de integridade");
+        }
+    }
+
+    private void copyDtoToEntity(ProductDTO dto, Product entity){
+        entity.setName(dto.getName());
+        entity.setDescription(dto.getDescription());
+        entity.setDate(dto.getDate());
+        entity.setImgUrl(dto.getImgUrl());
+        entity.setPrice(dto.getPrice());
+
+        entity.getCategories().clear();
+        for(CategoryDTO catDto: dto.getCategories()){
+            Category category = categoryRepository.getOne(catDto.getId());
+            entity.getCategories().add(category);
         }
     }
 }
