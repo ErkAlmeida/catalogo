@@ -1,14 +1,12 @@
-import React from  'react';
-import Alert from './Alert';
-
+import React from 'react';
+import './core/assets/styles/custom.scss';
+import './app.scss';
+import Navbar from './core/components/Navbar';
 
 const App = () =>{
     return(
-        <div className= "container mt-5">
-            <Alert text ="Teu cu"/>
-            <Alert text ="Erick Almeida"/>
-        </ div>
-    );
+        <Navbar />
+    ); 
 }
 
 export default App;
