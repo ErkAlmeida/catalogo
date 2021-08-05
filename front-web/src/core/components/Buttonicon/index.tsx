@@ -1,6 +1,6 @@
 import React from 'react';
 import "./styles.scss";
-import { ReactComponent as Arronwicon } from "../../assets/images/arrow.svg"
+import { ReactComponent as Arronwicon } from "core/assets/images/arrow.svg"
 
 
 type Props = {
