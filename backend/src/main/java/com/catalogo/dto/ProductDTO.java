@@ -3,7 +3,6 @@ package com.catalogo.dto;
 import com.catalogo.entities.Category;
 import com.catalogo.entities.Product;
 
-import javax.persistence.Column;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +42,6 @@ public class ProductDTO {
     }
 
     public ProductDTO(Product product, Set<Category> categories){
-
         this(product);
         categories.forEach(category -> this.categories.add(new CategoryDTO(category)));
     }

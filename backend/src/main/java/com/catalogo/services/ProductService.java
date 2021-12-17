@@ -44,38 +44,27 @@ public class ProductService {
         return  new ProductDTO(product,product.getCategories());
     }
 
-
     @Transactional
     public ProductDTO insert(ProductDTO productDTO){
-
         Product product = new Product();
-
         copyDtoToEntity(productDTO, product);
-
         product = productRepository.save(product);
-
         return new ProductDTO(product, product.getCategories());
     }
 
     @Transactional
     public ProductDTO update(Long id,ProductDTO productDto) {
-
        try {
            Product product = productRepository.getOne(id);
-
            copyDtoToEntity(productDto, product);
            product = productRepository.save(product);
-
            return new ProductDTO(product,product.getCategories());
-
        }catch (EntityNotFoundException e){
            throw  new ResourceNotFoundException("Categoria não encontrada Id: "+id);
        }
-
     }
 
     public void delete(Long id) {
-
         try {
           productRepository.deleteById(id);
         }catch (EmptyResultDataAccessException e){
@@ -91,7 +80,6 @@ public class ProductService {
         entity.setDate(dto.getDate());
         entity.setImgUrl(dto.getImgUrl());
         entity.setPrice(dto.getPrice());
-
         entity.getCategories().clear();
         for(CategoryDTO catDto: dto.getCategories()){
             Category category = categoryRepository.getOne(catDto.getId());

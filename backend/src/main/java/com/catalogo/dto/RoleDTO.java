@@ -1,5 +1,7 @@
 package com.catalogo.dto;
 
+import com.catalogo.entities.Role;
+
 import java.io.Serializable;
 
 public class RoleDTO implements Serializable {
@@ -15,6 +17,11 @@ public class RoleDTO implements Serializable {
     public RoleDTO(Long id, String authority) {
         this.id = id;
         this.authority = authority;
+    }
+
+    public RoleDTO(Role role) {
+        id = role.getId();
+        authority = role.getAuthority();
     }
 
     public Long getId() {

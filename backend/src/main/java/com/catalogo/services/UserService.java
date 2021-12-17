@@ -1,11 +1,12 @@
 package com.catalogo.services;
 
-import com.catalogo.dto.CategoryDTO;
-import com.catalogo.dto.ProductDTO;
-import com.catalogo.entities.Category;
-import com.catalogo.entities.Product;
-import com.catalogo.repositories.CategoryRepository;
-import com.catalogo.repositories.ProductRepository;
+import com.catalogo.dto.RoleDTO;
+import com.catalogo.dto.UserDTO;
+import com.catalogo.dto.UserInsertDTO;
+import com.catalogo.entities.Role;
+import com.catalogo.entities.User;
+import com.catalogo.repositories.RoleRepository;
+import com.catalogo.repositories.UserRepository;
 import com.catalogo.services.exception.DatabaseException;
 import com.catalogo.services.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,61 +25,49 @@ import java.util.Optional;
 public class UserService {
 
     @Autowired
-    ProductRepository productRepository;
-
+    BCryptPasswordEncoder passwordEncoder;
     @Autowired
-    CategoryRepository categoryRepository;
+    UserRepository userRepository;
+    @Autowired
+    RoleRepository roleRepository;
 
     @Transactional(readOnly = true)
-    public Page<ProductDTO> findAll(PageRequest pageRequest){
-
-        Page<Product> list = productRepository.findAll(pageRequest);
-
-        return list.map(c -> new ProductDTO(c));
+    public Page<UserDTO> findAll(PageRequest pageRequest){
+        Page<User> list = userRepository.findAll(pageRequest);
+        return list.map(c -> new UserDTO(c));
     }
 
     @Transactional(readOnly = true)
-    public ProductDTO findBYId(Long id){
-
-        Optional<Product> byId = productRepository.findById(id);
-        Product product = byId.orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada"));
-        return  new ProductDTO(product,product.getCategories());
-    }
-
-
-    @Transactional
-    public ProductDTO insert(ProductDTO productDTO){
-
-        Product product = new Product();
-
-        copyDtoToEntity(productDTO, product);
-
-        product = productRepository.save(product);
-
-        return new ProductDTO(product, product.getCategories());
+    public UserDTO findBYId(Long id){
+        Optional<User> byId = userRepository.findById(id);
+        User user = byId.orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada"));
+        return  new UserDTO(user);
     }
 
     @Transactional
-    public ProductDTO update(Long id,ProductDTO productDto) {
+    public UserDTO insert(UserInsertDTO dto){
+        User entity = new User();
+        copyDtoToEntity(dto, entity);
+        entity.setPassword(passwordEncoder.encode(dto.getPassword()));
+        entity = userRepository.save(entity);
+        return new UserDTO(entity);
+    }
 
+    @Transactional
+    public UserDTO update(Long id,UserDTO userDto) {
        try {
-           Product product = productRepository.getOne(id);
-
-           copyDtoToEntity(productDto, product);
-           product = productRepository.save(product);
-
-           return new ProductDTO(product,product.getCategories());
-
+           User entity = userRepository.getOne(id);
+           copyDtoToEntity(userDto, entity);
+           entity = userRepository.save(entity);
+           return new UserDTO(entity);
        }catch (EntityNotFoundException e){
            throw  new ResourceNotFoundException("Categoria não encontrada Id: "+id);
        }
-
     }
 
     public void delete(Long id) {
-
         try {
-          productRepository.deleteById(id);
+          userRepository.deleteById(id);
         }catch (EmptyResultDataAccessException e){
             throw  new ResourceNotFoundException("Categoria não encontrada Id: "+id);
         }catch (DataIntegrityViolationException e){
@@ -85,17 +75,15 @@ public class UserService {
         }
     }
 
-    private void copyDtoToEntity(ProductDTO dto, Product entity){
-        entity.setName(dto.getName());
-        entity.setDescription(dto.getDescription());
-        entity.setDate(dto.getDate());
-        entity.setImgUrl(dto.getImgUrl());
-        entity.setPrice(dto.getPrice());
+    private void copyDtoToEntity(UserDTO dto, User entity){
+        entity.setFirstName(dto.getFirstName());
+        entity.setLastName(dto.getLastName());
+        entity.setEmail(dto.getEmail());
 
-        entity.getCategories().clear();
-        for(CategoryDTO catDto: dto.getCategories()){
-            Category category = categoryRepository.getOne(catDto.getId());
-            entity.getCategories().add(category);
+        entity.getRoles().clear();
+        for(RoleDTO roleDTO: dto.getRoles()){
+            Role role = roleRepository.getOne(roleDTO.getId());
+            entity.getRoles().add(role);
         }
     }
 }
