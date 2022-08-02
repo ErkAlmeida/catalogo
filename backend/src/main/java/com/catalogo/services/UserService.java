@@ -10,11 +10,16 @@ import com.catalogo.repositories.RoleRepository;
 import com.catalogo.repositories.UserRepository;
 import com.catalogo.services.exception.DatabaseException;
 import com.catalogo.services.exception.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,8 +28,9 @@ import javax.persistence.EntityNotFoundException;
 import java.util.Optional;
 
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
 
+    private Logger log = LoggerFactory.getLogger(UserService.class);
     @Autowired
     BCryptPasswordEncoder passwordEncoder;
     @Autowired
@@ -86,6 +92,19 @@ public class UserService {
             Role role = roleRepository.getOne(roleDTO.getId());
             entity.getRoles().add(role);
         }
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
+        User user = userRepository.findByEmail(userName);
+
+        if (user.getEmail().isBlank()) {
+            log.error("User not found: "+userName);
+            throw new UsernameNotFoundException("Email not found");
+        }
+        log.info("User found: "+userName);
+        return user;
+
     }
 }
 
