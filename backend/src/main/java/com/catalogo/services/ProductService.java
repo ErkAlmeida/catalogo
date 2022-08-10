@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -29,23 +31,24 @@ public class ProductService {
     CategoryRepository categoryRepository;
 
     @Transactional(readOnly = true)
-    public Page<ProductDTO> findAll(PageRequest pageRequest){
+    public Page<ProductDTO> findAll(Long categoryId, String name, PageRequest pageRequest) {
 
-        Page<Product> list = productRepository.findAll(pageRequest);
+        List<Category> categories = (categoryId == 0) ? null : Arrays.asList(categoryRepository.getOne(categoryId));
+        Page<Product> list = productRepository.findAllProductByCategory(categories, name, pageRequest);
 
         return list.map(c -> new ProductDTO(c));
     }
 
     @Transactional(readOnly = true)
-    public ProductDTO findBYId(Long id){
+    public ProductDTO findBYId(Long id) {
 
         Optional<Product> byId = productRepository.findById(id);
         Product product = byId.orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada"));
-        return  new ProductDTO(product,product.getCategories());
+        return new ProductDTO(product, product.getCategories());
     }
 
     @Transactional
-    public ProductDTO insert(ProductDTO productDTO){
+    public ProductDTO insert(ProductDTO productDTO) {
         Product product = new Product();
         copyDtoToEntity(productDTO, product);
         product = productRepository.save(product);
@@ -53,35 +56,35 @@ public class ProductService {
     }
 
     @Transactional
-    public ProductDTO update(Long id,ProductDTO productDto) {
-       try {
-           Product product = productRepository.getOne(id);
-           copyDtoToEntity(productDto, product);
-           product = productRepository.save(product);
-           return new ProductDTO(product,product.getCategories());
-       }catch (EntityNotFoundException e){
-           throw  new ResourceNotFoundException("Categoria não encontrada Id: "+id);
-       }
+    public ProductDTO update(Long id, ProductDTO productDto) {
+        try {
+            Product product = productRepository.getOne(id);
+            copyDtoToEntity(productDto, product);
+            product = productRepository.save(product);
+            return new ProductDTO(product, product.getCategories());
+        } catch (EntityNotFoundException e) {
+            throw new ResourceNotFoundException("Categoria não encontrada Id: " + id);
+        }
     }
 
     public void delete(Long id) {
         try {
-          productRepository.deleteById(id);
-        }catch (EmptyResultDataAccessException e){
-            throw  new ResourceNotFoundException("Categoria não encontrada Id: "+id);
-        }catch (DataIntegrityViolationException e){
+            productRepository.deleteById(id);
+        } catch (EmptyResultDataAccessException e) {
+            throw new ResourceNotFoundException("Categoria não encontrada Id: " + id);
+        } catch (DataIntegrityViolationException e) {
             throw new DatabaseException("Violação de integridade");
         }
     }
 
-    private void copyDtoToEntity(ProductDTO dto, Product entity){
+    private void copyDtoToEntity(ProductDTO dto, Product entity) {
         entity.setName(dto.getName());
         entity.setDescription(dto.getDescription());
         entity.setDate(dto.getDate());
         entity.setImgUrl(dto.getImgUrl());
         entity.setPrice(dto.getPrice());
         entity.getCategories().clear();
-        for(CategoryDTO catDto: dto.getCategories()){
+        for (CategoryDTO catDto : dto.getCategories()) {
             Category category = categoryRepository.getOne(catDto.getId());
             entity.getCategories().add(category);
         }
